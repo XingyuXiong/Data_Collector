@@ -1,0 +1,57 @@
+﻿if (lstContent.SelectedIndex == -1)
+            {
+                MessageBox.Show("You have not selected anything yet!");
+                return;
+            }
+            else if (Record_Button.Content.ToString() == "Record")
+            {
+                Play_Button.IsEnabled = false;
+                foreach (object item in lstContent.SelectedItems)
+                {
+                    // Get index of the item
+                    int index = lstContent.Items.IndexOf(item);
+
+                    string WavName = string.Format("{0}.wav", index + 1);
+
+                    Record_Button.Background = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
+                    Record_Button.Content = "Stop";
+                    mciSendString("set wave bitpersample 8", "", 0, 0);
+
+                    mciSendString("set wave samplespersec 20000", "", 0, 0);
+                    mciSendString("set wave channels 2", "", 0, 0);
+                    mciSendString("set wave format tag pcm", "", 0, 0);
+                    mciSendString("open new type WAVEAudio alias movie", "", 0, 0);
+
+                    mciSendString("record movie", "", 0, 0);
+                    if (File.Exists(SavePath + @"\audio\" + WavName))
+                    {
+                        File.Delete(SavePath + @"\audio\" + WavName);
+                    }
+                }
+            }
+            else if (Record_Button.Content.ToString() == "Stop")
+            {
+                Record_Button.Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+                Record_Button.Content = "Record";
+                mciSendString("stop movie", "", 0, 0);
+                //lstContent.SelectedItem
+                //TextBox.Text = SavePath + @"\" + WavName + "||" + SavePath + @"\audio\" + WavName;
+
+                mciSendString("save movie " + WavName, "", 0, 0);
+                mciSendString("close movie", "", 0, 0);
+
+                if (File.Exists(SavePath + @"\" + WavName))
+                {
+                    File.Move(SavePath + @"\" + WavName, SavePath + @"\audio\" + WavName);
+                }
+                info[lstContent.SelectedIndex].Done = "Yes";
+                // Bind Info List as itemsource of the table
+                lstContent.ItemsSource = info;
+
+                // Set view for filtering
+                CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(lstContent.ItemsSource);
+
+                // Set Filter for filtering on the fly
+                view.Filter = UserFilter;
+            }
+            Play_Button.IsEnabled = true;
